@@ -4,10 +4,10 @@ import pytest
 
 try:
     # Attempt import from a potential package structure (e.g., src/my_package/...)
-    from src.my_financial_companion_bot.db_utils import get_db_connection, DEFAULT_DB_PATH
+    from src.my_financial_companion_bot.db_utils import get_db_connection, create_tables, DEFAULT_DB_PATH
 except ImportError:
     try:
-        from db_utils import get_db_connection, DEFAULT_DB_PATH
+        from db_utils import get_db_connection, create_tables, DEFAULT_DB_PATH
         print("Imported connect_db from 'db_utils'.")
     except ImportError as e:
         pytest.fail(f"Failed to import connect_db function. Ensure its path is correct. Error: {e}")
@@ -37,11 +37,11 @@ def temp_db_path(tmp_path):
 
 def test_connect_db_success(temp_db_path):
     """
-    Test that connect_db successfully establishes a connection to a database file.
+    Test that get_db_connection successfully establishes a connection to a database file.
     """
     print("Running test_connect_db_success...")
 
-    # Action: Call the connect_db function with the path provided by the fixture
+    # Action: Call the get_db_connection function with the path provided by the fixture
     conn = get_db_connection(temp_db_path)
 
     # Assertion 1: Verify that the function returned a connection object (not None)
@@ -61,6 +61,32 @@ def test_connect_db_success(temp_db_path):
                 cursor.execute("SELECT 1")
                 result = cursor.fetchone()
                 assert result[0] == 1, "A basic SELECT 1 query should return (1,) on a valid connection."
+    except sqlite3.Error as error:
+        # If a sqlite3.Error occurs during a basic query, the connection is likely invalid
+        pytest.fail(f"Database operation failed on seemingly successful connection: {error}")
+
+
+def test_create_tables_success(temp_db_path):
+    """
+    Test that create_tables successfully creates tables.
+    """
+    print("Running test_create_tables_success...")
+
+    # Action: Call the create_tables function with the path provided by the fixture
+    create_tables(temp_db_path)
+
+    conn = get_db_connection(temp_db_path)
+
+    # Assertion 1 & 2: Verify if the user_profile table was correctly created
+    # This checks if the user_profile table contain only one row with id = 1
+    try:
+        if conn:
+            with conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT user_profile_id FROM user_profile")
+                result = cursor.fetchall()
+                assert len(result) == 1, "The user_profile table can only contain one row."
+                assert result[0]["user_profile_id"] == 1, "The user_profile_id must be 1."
     except sqlite3.Error as error:
         # If a sqlite3.Error occurs during a basic query, the connection is likely invalid
         pytest.fail(f"Database operation failed on seemingly successful connection: {error}")
