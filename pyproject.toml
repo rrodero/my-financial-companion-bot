@@ -4,6 +4,10 @@ version = "0.1.0"
 description = ""
 authors = ["rrodero <rrodero@live.com>"]
 readme = "README.md"
+packages = [
+    {include = "src"},
+    {include = "my_financial_companion_bot", from = "src"},
+]
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -11,6 +15,9 @@ streamlit = "^1.45.1"
 pandas = "^2.2.3"
 requests = "^2.32.3"
 
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.5"
 
 [build-system]
 requires = ["poetry-core"]
