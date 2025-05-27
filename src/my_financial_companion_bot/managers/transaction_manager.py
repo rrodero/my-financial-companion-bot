@@ -1,5 +1,5 @@
 import sqlite3
-from typing import Optional
+from typing import Optional, List
 
 from ..db_utils import get_db_connection
 from ..models.transaction import Transaction
@@ -34,7 +34,6 @@ class TransactionManager:
     def _create_table(self):
         """
         Creates the transactions table if it doesn't exist.
-        This function aligns with the roadmap step 1.3 [1].
         """
         conn = get_db_connection(self.db_path)
         try:
@@ -50,8 +49,6 @@ class TransactionManager:
     def insert_transaction(self, transaction_data: Transaction) -> Optional[int]:
         """
         Inserts a new transaction record into the transactions table.
-        This method aligns with the roadmap step 1.3 [1].
-        transaction_data is expected to be a dictionary matching the schema.
         """
         sql = """
         INSERT INTO transactions (date, description, amount, type, original_source, category_id, tags, note, installment_series_id)
@@ -63,8 +60,7 @@ class TransactionManager:
             if conn:
                 with conn:
                     cursor = conn.cursor()
-                    values = transaction_data.to_tuple()
-                    cursor.execute(sql, values)
+                    cursor.execute(sql, transaction_data.to_tuple())
                     conn.commit()
                     transaction_id = cursor.lastrowid
                     print(f"Transaction inserted: {transaction_id}")
@@ -75,5 +71,54 @@ class TransactionManager:
                 conn.rollback()
             return None
         return None
+
+    def get_all_transactions(self) -> List[Transaction]:
+        """
+        Retrieves all transactions from the table.
+        Returns a list of transactions.
+        """
+        sql = """
+        SELECT transaction_id, date, description, 
+        amount, type, original_source, category_id, tags, note, installment_series_id 
+        FROM transactions;
+        """
+        conn = get_db_connection(self.db_path)
+        transactions = []
+        try:
+            if conn:
+                with conn:
+                    cursor = conn.cursor()
+                    cursor.execute(sql)
+                    transactions = [Transaction.from_dict(**row) for row in cursor.fetchall()]
+        except sqlite3.Error as e:
+            print(f"Database error during retrieval: {e}")
+        return transactions
+
+
+    def get_transaction_by_id(self, transaction_id: int) -> Transaction:
+        """
+        Retrieves a single transaction by its ID.
+        """
+        sql = """
+        SELECT transaction_id, date, description, 
+        amount, type, original_source, category_id, tags, note, installment_series_id 
+        FROM transactions WHERE transaction_id = ?;
+        """
+        conn = get_db_connection(self.db_path)
+        transaction = None
+        try:
+            if conn:
+                with conn:
+                    cursor = conn.cursor()
+                    cursor.execute(sql, (transaction_id,))
+                    row = cursor.fetchone()
+                    if row:
+                        transaction = Transaction.from_dict(**row)
+        except sqlite3.Error as e:
+            print(f"Database error during retrieval by ID: {e}")
+        return transaction
+
+
+
 
 

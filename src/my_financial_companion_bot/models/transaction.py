@@ -1,11 +1,11 @@
 from typing import Optional
-from .transaction_type import TransactionType
 
 class Transaction:
 
     def __init__(self, date: str, description: str,
-                 amount: float, type: TransactionType, original_source: str,
+                 amount: float, type: str, original_source: str,
                  category_id: int, tags: str, note: str, installment_series_id: Optional[int]):
+        self.transaction_id = None
         self.date = date
         self.description = description
         self.amount = amount
@@ -16,10 +16,17 @@ class Transaction:
         self.note = note
         self.installment_series_id = installment_series_id
 
+
+    @classmethod
+    def from_dict(cls, **kwargs):
+        for key, value in kwargs.items():
+            setattr(cls, key, value)
+        return cls
+
     def to_tuple(self):
         return (
             self.date, self.description, self.amount,
-            self.type.value, self.original_source, self.category_id,
+            self.type, self.original_source, self.category_id,
             self.tags, self.note, self.installment_series_id
         )
 

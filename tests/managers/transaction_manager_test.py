@@ -10,11 +10,19 @@ except ImportError as e:
 
 
 
-def test_insert_transaction_success(temp_db_path):
+def test_insert_retrieve_transaction_success(temp_db_path):
     manager = tm.TransactionManager(temp_db_path)
-    transaction = Transaction(
+    new_transaction = Transaction(
         '2025-05-10', 'Test Transaction', 25.5,
-        TransactionType.EXPENSE, 'CSV File', 1, '', '', None
+        TransactionType.EXPENSE.value, 'CSV File', 1, '', '', None
     )
-    assert manager.insert_transaction(transaction) == 1
+    transaction_id = manager.insert_transaction(new_transaction)
+
+    assert transaction_id == 1
+
+    transaction = manager.get_transaction_by_id(transaction_id)
+
+    assert transaction.transaction_id == 1 and transaction.type == TransactionType.EXPENSE.value
+
+
 
