@@ -10,14 +10,20 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.13"
 streamlit = "^1.45.1"
 pandas = "^2.2.3"
 requests = "^2.32.3"
 
-
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.5"
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib"
+]
+pythonpath = "src my_financial_companion_bot"
+
 
 [build-system]
 requires = ["poetry-core"]
