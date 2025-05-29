@@ -1,5 +1,5 @@
 import sqlite3
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 from ..db_utils import get_db_connection
 from ..models.transaction import Transaction
@@ -119,6 +119,49 @@ class TransactionManager:
         return transaction
 
 
+    def update_transaction(self, transaction_id: int, update_data: Dict) -> bool:
+        """
+        Updates an existing transaction by ID with new data.
+        update_data is a dictionary of columns to update.
+        """
+        # Build SQL query dynamically based on update_data keys
+        set_clauses = [f"{key} = ?" for key in update_data.keys() if key != 'transaction_id']
+        if not set_clauses:
+            print("No data provided for update.")
+            return False
 
+        sql = f"UPDATE transactions SET {', '.join(set_clauses)} WHERE transaction_id = ?"
+        values = list(update_data.values()) + [transaction_id]
+
+        try:
+            conn = get_db_connection(self.db_path)
+            with conn:
+                cursor = conn.cursor()
+                cursor.execute(sql, values)
+                # conn.commit()
+                print(f"Transaction ID {transaction_id} updated.")
+                return cursor.rowcount > 0
+        except sqlite3.Error as e:
+            print(f"Database error during update: {e}")
+            return False
+
+
+    def delete_transaction(self, transaction_id) -> bool:
+        """
+        Delete a transaction by its ID
+        :param transaction_id:
+        :return:
+        """
+        sql = "DELETE FROM transactions WHERE transaction_id = ?"
+        try:
+            conn = get_db_connection(self.db_path)
+            with conn:
+                cursor = conn.cursor()
+                cursor.execute(sql, (transaction_id,))
+                print(f"Transaction ID {transaction_id} deleted.")
+                return cursor.rowcount > 0
+        except sqlite3.Error as e:
+            print(f"Database error during deletion: {e}")
+            return False
 
 
