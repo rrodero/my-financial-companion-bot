@@ -4,7 +4,8 @@ class Transaction:
 
     def __init__(self, date: str, description: str,
                  amount: float, type: str, original_source: str,
-                 category_id: int, tags: str, note: str, installment_series_id: Optional[int]):
+                 category_id: Optional[int], tags: Optional[str], note: Optional[str],
+                 installment_series_id: Optional[int]):
         self.transaction_id = None
         self.date = date
         self.description = description

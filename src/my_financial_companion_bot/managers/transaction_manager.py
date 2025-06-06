@@ -1,7 +1,7 @@
 import sqlite3
 from typing import Optional, List, Dict
 
-from ..db_utils import get_db_connection
+from ..db_utils import get_db_connection, DEFAULT_DB_PATH
 from ..models.transaction import Transaction
 
 TRANSACTIONS_TABLE_SCHEMA = """
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS transactions (
 
 class TransactionManager:
 
-    def __init__(self, db_path: str):
+    def __init__(self, db_path: str = DEFAULT_DB_PATH):
         """
         Initializes the TransactionManager with the path to the database file.
         """
@@ -37,11 +37,9 @@ class TransactionManager:
         """
         conn = get_db_connection(self.db_path)
         try:
-            if conn:
-                with conn:
-                    cursor = conn.cursor()
-                    cursor.execute(TRANSACTIONS_TABLE_SCHEMA)
-                    conn.commit()
+            with conn:
+                cursor = conn.cursor()
+                cursor.execute(TRANSACTIONS_TABLE_SCHEMA)
         except sqlite3.Error as e:
             print(f"Database error during table creation: {e}")  # Basic error handling
 
@@ -57,20 +55,16 @@ class TransactionManager:
 
         conn = get_db_connection(self.db_path)
         try:
-            if conn:
-                with conn:
-                    cursor = conn.cursor()
-                    cursor.execute(sql, transaction_data.to_tuple())
-                    conn.commit()
-                    transaction_id = cursor.lastrowid
-                    print(f"Transaction inserted: {transaction_id}")
-                    return transaction_id
+            with conn:
+                cursor = conn.cursor()
+                cursor.execute(sql, transaction_data.to_tuple())
+                conn.commit()
+                transaction_id = cursor.lastrowid
+                print(f"Transaction inserted: {transaction_id}")
+                return transaction_id
         except sqlite3.Error as e:
             print(f"Database error during insertion: {e}")
-            if conn:
-                conn.rollback()
             return None
-        return None
 
     def get_all_transactions(self) -> List[Transaction]:
         """
